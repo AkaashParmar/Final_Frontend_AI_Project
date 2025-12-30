@@ -109,7 +109,7 @@ const App = () => {
             </Route>
           </Route>
 
-          <Route element={<ProtectedRoute />}>
+          
             <Route path="/Candidate-Dashboard" element={<CandidateLayout />}>
               <Route index element={<CandidateDashboard />} />
               <Route path="AllJDs" element={<AllJDs />} />
@@ -123,7 +123,7 @@ const App = () => {
               {/* Candidate Test Route */}
               <Route path="give-test/:questionSetId" element={<GiveTest />} />
             </Route>
-          </Route>
+          
 
           <Route element={<ProtectedRoute />}>
             <Route path="/SuperAdmin-Dashboard" element={<SuperAdminLayout />}>

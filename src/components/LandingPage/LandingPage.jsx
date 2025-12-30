@@ -273,9 +273,9 @@ const LandingPage = () => {
             </nav>
 
             <div className="hidden md:flex items-center space-x-2">
-              <button className="border border-[#6D28D9] bg-[#6D28D9] text-white px-6 py-1 rounded-2xl font-medium">
+              {/* <button className="border border-[#6D28D9] bg-[#6D28D9] text-white px-6 py-1 rounded-2xl font-medium">
                 Get Started
-              </button>
+              </button> */}
               <button className="border border-[#6D28D9] text-[#6D28D9] px-6 py-1 rounded-2xl font-medium" onClick={() => navigate('/login')}>
                 Login
               </button>
@@ -306,16 +306,27 @@ const LandingPage = () => {
                   </a>
                 ))}
                 <div className="flex flex-col space-y-2 pt-4">
-                  <button className="border border-[#6D28D9] bg-[#6D28D9] text-white px-6 py-1 rounded-2xl font-medium">
+                  {/* <button className="border border-[#6D28D9] bg-[#6D28D9] text-white px-6 py-1 rounded-2xl font-medium">
                     Get Started
-                  </button>
+                  </button> */}
                   <button className="border border-[#6D28D9] text-[#6D28D9] px-6 py-1 rounded-2xl font-medium">
-                    Register
-                  </button>
-                  <button className="border border-[#6D28D9] text-[#6D28D9] px-6 py-1 rounded-2xl font-medium" onClick={() => { setIsOpen(false); navigate('/CandidateLogin'); }}>
                     Login
                   </button>
+                  <button className="border border-[#6D28D9] text-[#6D28D9] px-6 py-1 rounded-2xl font-medium" onClick={() => { setIsOpen(false); navigate('/CandidateLogin'); }}>
+                    Login as a candidate
+                  </button>
                 </div>
+                {/* <div className="hidden md:flex items-center space-x-2">
+              <button className="border border-[#6D28D9] bg-[#6D28D9] text-white px-6 py-1 rounded-2xl font-medium">
+                Get Started
+              </button>
+              <button className="border border-[#6D28D9] text-[#6D28D9] px-6 py-1 rounded-2xl font-medium" onClick={() => navigate('/login')}>
+                Login
+              </button>
+              <button className="border border-[#6D28D9] text-[#6D28D9] px-6 py-1 rounded-2xl font-medium" onClick={() => navigate('/CandidateLogin')}>
+                Login as a candidate
+              </button>
+            </div> */}
               </nav>
             </div>
           )}

@@ -174,11 +174,12 @@ function JDDetails() {
             aiScore: filteredInfo?.aiScore || unfilteredInfo?.aiScore || 0,
             aiExplanation: filteredInfo?.aiExplanation || unfilteredInfo?.aiExplanation || '',
             appliedAt: formatDate(candidate.appliedAt),
+            isProcessed: !!filteredInfo || !!unfilteredInfo,
         };
     });
 
     const getFilteredData = () => {
-        let data = mappedCandidates.filter(c => c.aiScore > 0);
+        let data = mappedCandidates.filter(c => c.isProcessed);
 
         if (activeTab === "filtered") {
             data = data.filter(candidate => candidate.isFiltered === true);
@@ -197,8 +198,8 @@ function JDDetails() {
 
     const filteredCandidates = getFilteredData();
 
-    const filteredCount = mappedCandidates.filter(c => c.isFiltered === true && c.aiScore > 0).length;
-    const unfilteredCount = mappedCandidates.filter(c => c.isFiltered === false && c.aiScore > 0).length;
+    const filteredCount = mappedCandidates.filter(c => c.isFiltered === true && c.isProcessed).length;
+    const unfilteredCount = mappedCandidates.filter(c => c.isFiltered === false && c.isProcessed).length;
 
     const totalPagesTable1 = Math.ceil(pendingCandidates.length / itemsPerPageTable1);
     const startIndexTable1 = (currentPageTable1 - 1) * itemsPerPageTable1;
