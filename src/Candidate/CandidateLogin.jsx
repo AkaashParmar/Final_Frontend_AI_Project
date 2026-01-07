@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import img from "../assets/CandidateLogin.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { baseUrl } from "../utils/ApiConstants";
+import CandidateRegister from "./CandidateRegister";
 
 const CandidateLogin = () => {
     const [email, setEmail] = useState("");
@@ -39,16 +40,19 @@ const CandidateLogin = () => {
                 name: data.candidate.name,
                 email: data.candidate.email,
                 phone: data.candidate.phone,
-                hasLoggedIn: data.candidate.hasLoggedIn // include this field
+                hasLoggedIn: data.candidate.hasLoggedIn
             };
 
             localStorage.setItem("candidateToken", data.token);
             localStorage.setItem("candidate", JSON.stringify(cleanCandidate));
-            sessionStorage.setItem("candidateData", JSON.stringify(cleanCandidate)); // For Examination.jsx
-            console.log("Saved candidateData to sessionStorage:", cleanCandidate);
+            sessionStorage.setItem(
+                "candidateData",
+                JSON.stringify(cleanCandidate)
+            );
 
             setLoading(false);
-            // If first login (hasLoggedIn is false), show Chatbot, else dashboard
+
+            // First login → Chatbot, else Dashboard
             if (!data.candidate.hasLoggedIn) {
                 navigate("/Candidate-Chatbot");
             } else {
@@ -65,7 +69,9 @@ const CandidateLogin = () => {
             <h1 className="text-3xl text-center md:text-4xl font-bold text-gray-900 mb-10 mt-5">
                 Welcome Back
             </h1>
-            <div className="flex flex-col md:flex-row items-center justify-between max-w-6xl w-full">
+
+            <div className="flex flex-col md:flex-row items-center justify-between max-w-6xl w-full mx-auto">
+                {/* Left Section */}
                 <div className="flex-1 text-center md:text-left mb-10 md:mb-0">
                     <p className="text-2xl text-[#0496FF] text-center font-medium mb-8">
                         Login to Your AIRecruiter
@@ -77,9 +83,12 @@ const CandidateLogin = () => {
                     />
                 </div>
 
+                {/* Right Section */}
                 <div className="flex-1 bg-white rounded-2xl shadow-md border border-gray-100 p-8 max-w-md mx-auto">
                     <div className="mb-4">
-                        <label className="block text-gray-800 font-medium mb-1">Email ID</label>
+                        <label className="block text-gray-800 font-medium mb-1">
+                            Email ID
+                        </label>
                         <input
                             type="email"
                             value={email}
@@ -90,7 +99,9 @@ const CandidateLogin = () => {
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-gray-800 font-medium mb-1">Password</label>
+                        <label className="block text-gray-800 font-medium mb-1">
+                            Password
+                        </label>
                         <input
                             type="password"
                             value={password}
@@ -100,7 +111,9 @@ const CandidateLogin = () => {
                         />
                     </div>
 
-                    {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+                    {error && (
+                        <p className="text-red-500 text-sm mb-2">{error}</p>
+                    )}
 
                     <div className="flex justify-center">
                         <button
@@ -114,9 +127,12 @@ const CandidateLogin = () => {
 
                     <p className="text-center text-sm text-gray-600">
                         Don't have an account?{" "}
-                        <a href="#" className="text-blue-600 hover:underline">
+                        <Link
+                            to="/CandidateRegister"
+                            className="text-blue-600 hover:underline"
+                        >
                             Sign Up
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>
