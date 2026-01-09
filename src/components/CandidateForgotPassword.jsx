@@ -4,7 +4,7 @@ import img from "../assets/RecruiterLogin.png";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { baseUrl } from "../utils/ApiConstants";
-    
+
 const CandidateForgotPassword = () => {
     const [step, setStep] = useState(1);
     const [email, setEmail] = useState("");
@@ -92,6 +92,36 @@ const CandidateForgotPassword = () => {
             return;
         }
 
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters");
+            return;
+        }
+
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        const hasSmallLetter = /[a-z]/.test(password);
+        const hasCapitalLetter = /[A-Z]/.test(password);
+
+        if (!hasNumber) {
+            setError("Password must contain at least one number");
+            return;
+        }
+
+        if (!hasSpecialChar) {
+            setError("Password must contain at least one special character");
+            return;
+        }
+
+        if (!hasSmallLetter) {
+            setError("Password must contain at least one lowercase letter");
+            return;
+        }
+
+        if (!hasCapitalLetter) {
+            setError("Password must contain at least one uppercase letter");
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -128,7 +158,7 @@ const CandidateForgotPassword = () => {
         <div className="min-h-screen bg-[#FFFFFF05] flex items-center justify-center px-4">
             <div className="max-w-6xl w-full">
                 <h1 className="text-3xl text-center md:text-4xl font-bold text-gray-900 mb-10">
-                    Forgot Password
+                    Reset Password
                 </h1>
                 <div className="flex flex-col md:flex-row items-center justify-between">
                     <div className="flex-1 text-center md:text-left mb-10 md:mb-0">
@@ -263,6 +293,7 @@ const CandidateForgotPassword = () => {
                                     >
                                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                     </button>
+                                    <p className="text-xs text-gray-500 mt-1">Min 8 characters, 1 number, 1 special char, 1 uppercase & 1 lowercase</p>
                                 </div>
 
                                 <div className="mb-6 relative">

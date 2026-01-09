@@ -815,12 +815,10 @@ function Report() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className={`${loading ? 'filter blur-sm pointer-events-none' : ''} max-w-7xl mx-auto` }>
       <div className="flex flex-col sm:flex-row justify-between items-stretch gap-6 mb-8">
         
-      </div>
 
-      <div className="bg-white rounded-xl shadow-md border border-gray-300 p-4 md:p-6 mb-8">
+      <div className="bg-white w-full rounded-xl shadow-md border border-gray-300 p-4 md:p-6 mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h2 className="text-xl font-semibold text-gray-800">Candidates</h2>
 

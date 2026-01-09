@@ -10,6 +10,7 @@ function AppliedJD() {
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [selectedSkills, setSelectedSkills] = useState(null);
     const [showSkillsPopup, setShowSkillsPopup] = useState(false);
+    const [candidateId, setCandidateId] = useState(null);
     const itemsPerPage = 5;
 
     useEffect(() => {
@@ -30,6 +31,44 @@ function AppliedJD() {
         };
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const getCandidateInfo = () => {
+            const user = JSON.parse(localStorage.getItem("candidate"));
+            console.log("Candidate Info:", user);
+            if (user && user.id) {
+                setCandidateId(user.id);
+            }
+        };
+        getCandidateInfo();
+    }, [])
+
+    const getApplicationStatus = (job) => {
+        if (!candidateId || !job.appliedCandidates || job.appliedCandidates.length === 0) {
+            return 'pending';
+        }
+        
+        const appliedCandidate = job.appliedCandidates.find(
+            (candidate) => candidate.candidate === candidateId
+        );
+        
+        if (appliedCandidate && appliedCandidate.status) {
+            return appliedCandidate.status;
+        }
+        
+        return 'pending';
+    };
+
+    const getStatusBadgeClass = (status) => {
+        switch (status.toLowerCase()) {
+            case 'filtered':
+                return 'bg-green-100 text-green-600';
+            case 'unfiltered':
+                return 'bg-red-100 text-red-600';
+            default:
+                return 'bg-yellow-100 text-yellow-600';
+        }
+    };
 
     const handleViewSkills = (requirements) => {
         setSelectedSkills(requirements);
@@ -59,28 +98,27 @@ function AppliedJD() {
             {/* Skills Popup with Blur Background */}
             {showSkillsPopup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    {/* Blur Backdrop */}
-                    <div 
+                    <div
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={closeSkillsPopup}
                     ></div>
-                    
+
                     {/* Popup Content */}
                     <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto z-10">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold text-gray-800">Required Skills</h3>
-                            <button 
+                            <button
                                 onClick={closeSkillsPopup}
                                 className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                             >
                                 <X size={20} className="text-gray-600" />
                             </button>
                         </div>
-                        
+
                         <div className="space-y-2">
                             {selectedSkills && selectedSkills.length > 0 ? (
                                 selectedSkills.map((skill, index) => (
-                                    <div 
+                                    <div
                                         key={index}
                                         className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm"
                                     >
@@ -91,7 +129,7 @@ function AppliedJD() {
                                 <p className="text-gray-500 text-sm">No skills listed</p>
                             )}
                         </div>
-                        
+
                         <button
                             onClick={closeSkillsPopup}
                             className="mt-6 w-full py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
@@ -137,35 +175,43 @@ function AppliedJD() {
                                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Job Title</th>
                                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Applied On</th>
                                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Skills</th>
+                                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Status</th>
 
                             </tr>
                         </thead>
                         <tbody>
                             {currentData.length > 0 ? (
-                                currentData.map((job, index) => (
-                                    <tr
-                                        key={index}
-                                        className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-                                    >
-                                        <td className="py-4 px-4 text-sm text-gray-800">
-                                            {index + 1}
-                                        </td>
-                                        <td className="py-4 px-4 text-sm text-gray-600">{job.companyName}</td>
-                                        <td className="py-4 px-4 text-sm text-gray-600">{job?.offerId?.jobTitle}</td>
-                                        <td className="py-4 px-4 text-sm text-gray-600">
-                                            {formatDate(job.createdAt)}
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <button 
-                                                onClick={() => handleViewSkills(job.requirements)}
-                                                className="px-4 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium hover:bg-blue-200"
-                                            >
-                                                View
-                                            </button>
-                                        </td>
-                                      
-                                    </tr>
-                                ))
+                                currentData.map((job, index) => {
+                                    const status = getApplicationStatus(job);
+                                    return (
+                                        <tr
+                                            key={index}
+                                            className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <td className="py-4 px-4 text-sm text-gray-800">
+                                                {startIndex + index + 1}
+                                            </td>
+                                            <td className="py-4 px-4 text-sm text-gray-600">{job.companyName}</td>
+                                            <td className="py-4 px-4 text-sm text-gray-600">{job?.offerId?.jobTitle}</td>
+                                            <td className="py-4 px-4 text-sm text-gray-600">
+                                                {formatDate(job.createdAt)}
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <button
+                                                    onClick={() => handleViewSkills(job.requirements)}
+                                                    className="px-4 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium hover:bg-blue-200"
+                                                >
+                                                    View
+                                                </button>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusBadgeClass(status)}`}>
+                                                    {status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
                                     <td colSpan="6" className="py-6 text-center text-gray-500">

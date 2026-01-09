@@ -4,9 +4,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { baseUrl } from "../utils/ApiConstants";
 import {
-    Upload,
-    CheckCircle,
-    X,
     Eye,
     EyeOff,
     AlertCircle,
@@ -20,8 +17,6 @@ const CandidateRegister = () => {
         phone: "",
         password: ""
     });
-    const [resume, setResume] = useState(null);
-    const [resumeName, setResumeName] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -29,24 +24,21 @@ const CandidateRegister = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        if (error) setError("");
-    };
-
-    const handleResumeChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setResume(file);
-            setResumeName(file.name);
+        
+        if (name === "phone") {
+            const numericValue = value.replace(/[^0-9]/g, "");
+            setFormData(prev => ({
+                ...prev,
+                [name]: numericValue
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
         }
-    };
-
-    const removeResume = () => {
-        setResume(null);
-        setResumeName("");
+        
+        if (error) setError("");
     };
 
     const validateForm = () => {
@@ -64,6 +56,31 @@ const CandidateRegister = () => {
 
         if (password.length < 8) {
             setError("Password must be at least 8 characters");
+            return false;
+        }
+
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        const hasSmallLetter = /[a-z]/.test(password);
+        const hasCapitalLetter = /[A-Z]/.test(password);
+
+        if (!hasNumber) {
+            setError("Password must contain at least one number");
+            return false;
+        }
+
+        if (!hasSpecialChar) {
+            setError("Password must contain at least one special character");
+            return false;
+        }
+
+        if (!hasSmallLetter) {
+            setError("Password must contain at least one lowercase letter");
+            return false;
+        }
+
+        if (!hasCapitalLetter) {
+            setError("Password must contain at least one uppercase letter");
             return false;
         }
 
@@ -157,38 +174,6 @@ const CandidateRegister = () => {
 
                     <div className="mb-4">
                         <label className="block text-gray-800 font-medium mb-1">
-                            Resume <span className="text-gray-400">(Optional)</span>
-                        </label>
-                        <div className="relative">
-                            {!resume ? (
-                                <div className="border-2 border-dashed border-gray-300 rounded-md px-3 py-2 hover:border-blue-500 cursor-pointer">
-                                    <input
-                                        type="file"
-                                        accept=".pdf,.doc,.docx"
-                                        onChange={handleResumeChange}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Upload className="w-5 h-5 text-gray-400" />
-                                        <span className="text-sm text-gray-600">Upload Resume</span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="border border-green-300 bg-green-50 rounded-md px-3 py-2 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
-                                        <span className="text-sm text-gray-700 truncate max-w-[200px]">{resumeName}</span>
-                                    </div>
-                                    <button type="button" onClick={removeResume} className="text-red-500 hover:text-red-700 p-1">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-gray-800 font-medium mb-1">
                             Password <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -208,7 +193,7 @@ const CandidateRegister = () => {
                                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">Min 8 characters</p>
+                        <p className="text-xs text-gray-500 mt-1">Min 8 characters, 1 number, 1 special char, 1 uppercase & 1 lowercase</p>
                     </div>
 
                     {error && (
