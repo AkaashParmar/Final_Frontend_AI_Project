@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Pagination from '../components/LandingPage/Pagination';
 import AssessmentAPI from "./api/generateAssessmentApi";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const QuestionsList = () => {
     const { questionSetId  } = useParams(); // assessment ID
@@ -53,6 +55,88 @@ const QuestionsList = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const handleDownloadPDF = async () => {
+        try {
+            const title = 'Assessment Questions';
+
+            // Build an offscreen DOM node containing the printable content
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.style.top = '0';
+            container.style.width = '800px';
+            container.style.padding = '24px';
+            container.style.background = '#fff';
+            container.style.color = '#111827';
+
+            const header = document.createElement('div');
+            header.innerHTML = `<h1 style="font-size:20px;margin-bottom:8px">${title}</h1><p>Total questions: ${questions.length}</p>`;
+            container.appendChild(header);
+
+            questions.forEach((q, idx) => {
+                const prompt = q.content?.prompt || q.content?.question || '';
+                const qDiv = document.createElement('div');
+                qDiv.style.marginBottom = '14px';
+                qDiv.innerHTML = `<div><strong>Q${idx + 1}.</strong> ${prompt}</div>`;
+
+                if (Array.isArray(q.content?.options) && q.content.options.length > 0) {
+                    const ol = document.createElement('ol');
+                    ol.style.margin = '6px 0 0 18px';
+                    q.content.options.forEach(opt => {
+                        const li = document.createElement('li');
+                        li.textContent = opt;
+                        ol.appendChild(li);
+                    });
+                    qDiv.appendChild(ol);
+
+                    const correct = q.content?.answer || q.content?.correct || q.content?.correct_answer || q.content?.answer_key;
+                    if (correct) {
+                        const c = document.createElement('div');
+                        c.innerHTML = `<strong>Correct:</strong> ${correct}`;
+                        qDiv.appendChild(c);
+                    }
+                }
+
+                container.appendChild(qDiv);
+            });
+
+            document.body.appendChild(container);
+
+            // Render container to canvas and generate PDF
+            const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            const imgData = canvas.toDataURL('image/png');
+
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            const imgWidth = pdfWidth;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+
+            while (heightLeft > -0.1) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+
+            const filename = `Assessment-${questionSetId || 'questions'}.pdf`;
+            pdf.save(filename);
+
+            // cleanup
+            document.body.removeChild(container);
+        } catch (err) {
+            console.error('PDF generation failed', err);
+            alert('Failed to generate PDF.');
+        }
+    };
+
     if (loading) return <div>Loading questions...</div>;
     if (error) return <div className="text-center text-red-500 py-6">{error}</div>;
 
@@ -62,8 +146,13 @@ const QuestionsList = () => {
                 <h1 className="text-2xl sm:text-3xl font-medium text-gray-900 tracking-tight">
                     Questions List
                 </h1>
-                <div className="px-4 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 font-semibold rounded-full shadow border border-indigo-200 text-sm">
-                    Total: {questions.length}
+                <div className="flex items-center gap-1">
+                    <div onClick={handleDownloadPDF} role="button" tabIndex={0} className="cursor-pointer px-4 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 font-semibold rounded-full shadow border border-indigo-200 text-sm">
+                        Download PDF
+                    </div>
+                    <div className="px-4 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 font-semibold rounded-full shadow border border-indigo-200 text-sm">
+                        Total: {questions.length}
+                    </div>
                 </div>
             </div>
 
