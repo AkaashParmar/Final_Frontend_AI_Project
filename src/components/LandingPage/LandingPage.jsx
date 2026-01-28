@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { superAdminBaseUrl } from '../../utils/ApiConstants';
+import Logo from '../../img/Logo.png';
 import {
   BrainCircuit,
   Search,
@@ -234,9 +235,7 @@ const LandingPage = () => {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-[#6D28D9]">
-                Recruter AI
-              </span>
+              <img src={Logo} alt="Recruter AI Logo" className="h-12 w-auto" />
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
