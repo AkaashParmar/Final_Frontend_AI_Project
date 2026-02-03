@@ -34,7 +34,7 @@ const AdminHeader = ({ onMenuToggle }) => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                console.log(res.data);
+                // console.log(res.data);
                 
                 setUser(res.data.data);
             } catch (err) {
