@@ -33,6 +33,7 @@ const CandidateDashboard = () => {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [applicationStatus, setApplicationStatus] = useState([]);
+    const [appliedJdIds, setAppliedJdIds] = useState([]);
     const [graphData, setGraphData] = useState({
         points: [],
         aiScores: [],
@@ -284,6 +285,8 @@ const CandidateDashboard = () => {
                     });
 
                     setApplicationStatus(statusList.slice(-5));
+                    const appliedIds = res.data.jobs.map(job => job._id);
+                    setAppliedJdIds(appliedIds);
                 }
             } catch (error) {
                 console.log(error);
@@ -315,7 +318,7 @@ const CandidateDashboard = () => {
     useEffect(() => {
         const fetchlatestfivejds = async () => {
             try {
-                const res = await axios.get(`${baseUrl}/candidate/latest-five-jds`, {
+                const res = await axios.get(`${baseUrl}/jd/all-jd`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("candidateToken")}`,
                     },
@@ -323,15 +326,22 @@ const CandidateDashboard = () => {
                 console.log(res.data);
 
                 if (res.data?.success && res.data?.data) {
-                    setLatestFiveJds(res.data.data);
+                    const sortedJds = [...res.data.data]
+                        .filter(jd => !appliedJdIds.includes(jd._id))
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .slice(0, 5);
+
+                    setLatestFiveJds(sortedJds);
                 }
             } catch (error) {
                 console.log(error);
             }
         };
-        fetchlatestfivejds();
-    }, []);
 
+        if (appliedJdIds.length >= 0) {
+            fetchlatestfivejds();
+        }
+    }, [appliedJdIds]);
     useEffect(() => {
         const fetchJDs = async () => {
             try {
@@ -528,7 +538,7 @@ const CandidateDashboard = () => {
                     <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-5 shadow-sm lg:col-span-2 h-[380px] sm:h-[400px] md:h-[420px] flex flex-col">
                         <div className="flex items-center justify-between mb-3 sm:mb-4 flex-shrink-0">
                             <h2 className="text-sm sm:text-base font-semibold text-slate-900">Application Status</h2>
-                            <button className="text-xs sm:text-sm font-medium text-indigo-500 hover:underline">View All</button>
+                            <Link to="/Candidate-Dashboard/AppliedJD" className="text-xs sm:text-sm font-medium text-indigo-500 hover:underline">View All</Link>
                         </div>
                         <div className="flex-1 overflow-x-auto overflow-y-auto pr-1 sm:pr-2">
                             <div className="space-y-3 sm:space-y-4 min-w-[400px]">
