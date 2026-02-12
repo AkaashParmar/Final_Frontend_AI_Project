@@ -34,6 +34,7 @@ import Report from './Candidate/Pages/Report';
 import AppliedJD from './Candidate/Pages/AppliedJD';
 import Examination from './Candidate/Pages/Examination';
 import StartExam from './Candidate/Pages/StartExam';
+import { useState } from "react";
 import CandidateProfile from './Candidate/Pages/CandidateProfile';
 import RMGLayout from './RMGAdmin/Pages/RMGLayout';
 import Requirement from './RMGAdmin/Pages/Requirement';
@@ -71,10 +72,17 @@ import { CompanyProvider } from './Context/companyContext';
 import CandidateRegister from './Candidate/CandidateRegister';
 import CandidateForgotPassword from './components/CandidateForgotPassword';
 import RecruiterProfile from './RecruiterAdmin/RecruiterProfile';
+import LoadingScreen from '../src/components/MainLoader.jsx';
 import JDDetail from './components/JDDetail.jsx';
 import ApplyToJob from './Candidate/Pages/ApplyToJob.jsx';
 
 const App = () => {
+
+   const [isLoading, setIsLoading] = useState(true);
+
+  if (isLoading){
+    return<LoadingScreen onLoadingComplete={()=>setIsLoading(false)}/>
+  }
   return (
 
     <CompanyProvider>
