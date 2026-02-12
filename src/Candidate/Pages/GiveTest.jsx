@@ -54,6 +54,7 @@ const GiveTest = ({ jdId }) => {
   const [tabSwitches, setTabSwitches] = useState(0);
   const faceEventRef = useRef(null);
   const webcamInterviewRef = useRef(null);
+  const webcamPreviewRef = useRef(null);
   const saveViolationsSentRef = useRef(false);
   const [showWebcamInterview, setShowWebcamInterview] = useState(false);
   const [showAudioInterview, setShowAudioInterview] = useState(false);
@@ -71,6 +72,8 @@ const GiveTest = ({ jdId }) => {
   // Recording state
   const [recordingStarted, setRecordingStarted] = useState(false);
   const recordingStartedRef = useRef(false);
+  const [recordingPermissionAsked, setRecordingPermissionAsked] = useState(false);
+  const [recordingPermissionGranted, setRecordingPermissionGranted] = useState(false);
 
   // Violations tracking
   const [violations, setViolations] = useState({
@@ -185,6 +188,7 @@ const GiveTest = ({ jdId }) => {
     try {
       const existing = window.__candidateCameraStream;
       if (existing && !localStream) {
+        console.log('GiveTest: found global stream on mount, attaching immediately');
         setMediaAllowed(true);
         setLocalStream(existing);
         streamRef.current = existing;
@@ -394,10 +398,10 @@ const GiveTest = ({ jdId }) => {
     } catch (e) { console.warn('mount log failed', e); }
   }, []);
 
-  // Auto-start test when GiveTest mounts (ensure monitoring and preview activate)
-  useEffect(() => {
-    setTestStarted(true);
-  }, []);
+  // DO NOT auto-start test - wait for recording permission first
+  // useEffect(() => {
+  //   setTestStarted(true);
+  // }, []);
 
   // Log whenever localStream changes
   useEffect(() => {
@@ -708,26 +712,66 @@ const GiveTest = ({ jdId }) => {
     handleNext();
   };
 
-  // Auto-start recording when media is available (not waiting for any section)
+  // Start recording immediately when test starts (after permission granted)
+  const recordingStartedManuallyRef = useRef(false);
+  useEffect(() => {
+    if (testStarted && recordingPermissionGranted && !submitted && !recordingStartedManuallyRef.current) {
+      recordingStartedManuallyRef.current = true;
+      // Call startInterview on persistent recorder to begin capturing
+      try {
+        if (webcamInterviewRef.current && typeof webcamInterviewRef.current.startInterview === 'function') {
+          console.log('GiveTest: Calling startInterview to begin recording from MCQ section');
+          webcamInterviewRef.current.startInterview();
+        }
+      } catch (e) {
+        console.warn('GiveTest: Failed to start interview recording:', e);
+      }
+    }
+  }, [testStarted, recordingPermissionGranted, submitted]);
+
+  // Start recording immediately on mount as soon as ANY candidate stream is available
+  // This polling ensures we catch the stream from CameraCheck even if there's a timing race
   useEffect(() => {
     if (recordingStartedRef.current) return;
-    if (!testStarted || !mediaAllowed) return;
-    
-    console.log('GiveTest: media available and test started, auto-starting recording...');
-    try {
-      const candidateStream = streamRef.current || localStream || window.__candidateCameraStream;
-      if (candidateStream) {
-        setRecordingStarted(true);
-        recordingStartedRef.current = true;
-        toast.success('🎥 Test recording started! Your entire test is now being recorded.');
-        console.log('GiveTest: recording auto-started from page load');
-      } else {
-        console.warn('GiveTest: camera stream not available for recording');
+
+    const checkAndStartRecording = () => {
+      const candidateStream =
+        streamRef.current ||
+        localStream ||
+        window.__candidateCameraStream;
+
+      if (!candidateStream) return false;
+
+      // Stream found - start recording
+      console.log('GiveTest: candidate stream detected, starting recording now', {
+        streamRef: !!streamRef.current,
+        localStream: !!localStream,
+        globalStream: !!window.__candidateCameraStream,
+      });
+
+      setRecordingStarted(true);
+      recordingStartedRef.current = true;
+      return true;
+    };
+
+    // Immediate check
+    if (checkAndStartRecording()) return;
+
+    // Poll until stream is available (up to 10 seconds)
+    let attempts = 0;
+    const pollId = setInterval(() => {
+      attempts++;
+      if (checkAndStartRecording() || attempts > 100) {
+        clearInterval(pollId);
+        if (!recordingStartedRef.current) {
+          console.warn('GiveTest: stream not detected after polling, fallback to mediaAllowed');
+        }
       }
-    } catch (err) {
-      console.error('Failed to auto-start recording:', err);
-    }
-  }, [testStarted, mediaAllowed]);
+    }, 100);
+
+    return () => clearInterval(pollId);
+  }, []);
+
 
   // Submit all sections
   // options: { markComplete: boolean }
@@ -886,14 +930,18 @@ const GiveTest = ({ jdId }) => {
       setSubmitted(true);
       toast.success("Test submitted successfully!");
 
-      // STOP CAMERA + MONITORING AFTER SUBMIT
+      // STOP RECORDING + MONITORING AFTER SUBMIT
       try {
-        // 1. Stop webcam recorder
+        // 1. Stop webcam recorder (stops recording)
         if (webcamInterviewRef.current && typeof webcamInterviewRef.current.stopAll === "function") {
-          webcamInterviewRef.current.stopAll();
+          console.log('GiveTest: stopping recording on test submit...');
+          await webcamInterviewRef.current.stopAll();
+          recordingStartedRef.current = false;
+          setRecordingStarted(false);
+          console.log('GiveTest: recording stopped');
         }
 
-        // 3. Disable further tab/inactivity/face violations
+        // 2. Disable further tab/inactivity/face violations
         setTestStarted(false);
         // clear any multi-face UI state
         try { setShowMultipleFaces(false); } catch (e) {}
@@ -905,7 +953,6 @@ const GiveTest = ({ jdId }) => {
       try {
         if (!saveViolationsSentRef.current) {
           saveViolationsSentRef.current = true;
-          console.log("HEYYYYYYYYYYYYYYYYYYYYY:")
             const violationsPayload = {
               question_set_id: questionSetId,
               candidate_id: finalCandidateId,
@@ -1035,6 +1082,84 @@ const GiveTest = ({ jdId }) => {
     );
   } */}
 
+  // Recording permission dialog - show before allowing test to start
+  if (recordingStarted && !recordingPermissionAsked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md text-center border-2 border-blue-200">
+          <div className="text-6xl mb-6">🎥</div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Recording Permission</h2>
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6 text-left">
+            <p className="text-gray-700 mb-3">
+              <strong>Your camera is now recording.</strong>
+            </p>
+            <p className="text-gray-600 text-sm mb-2">
+              This recording will capture your entire test session to ensure:
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1 ml-4">
+              <li>✓ Test integrity and fairness</li>
+              <li>✓ Proper candidate verification</li>
+              <li>✓ A single continuous video of your test</li>
+            </ul>
+          </div>
+          <p className="text-gray-600 mb-6">
+            Do you allow us to record your test session?
+          </p>
+          <div className="flex gap-4">
+            <button
+  onClick={() => {
+    setRecordingPermissionAsked(true);
+    setRecordingPermissionGranted(true);
+    setInstructionsVisible(false);
+    setTestStarted(true);
+    setStep('test');
+    toast.success('✓ Permission granted! Starting test...');
+  }}
+
+              className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-semibold"
+            >
+              Deny
+            </button>
+            <button
+              onClick={() => {
+                setRecordingPermissionAsked(true);
+                setRecordingPermissionGranted(true);
+                setInstructionsVisible(false);
+                setTestStarted(true);
+                setStep('test');
+                toast.success('✓ Permission granted! Starting test...');
+              }}
+              className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+            >
+              Allow
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if recording was denied
+  if (recordingPermissionAsked && !recordingPermissionGranted) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
+          <div className="text-red-500 text-6xl mb-4">❌</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Recording Permission Denied</h2>
+          <p className="text-gray-600 mb-6">
+            Recording is mandatory for this test. You cannot proceed without granting recording permission.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition font-semibold"
+          >
+            Reload and Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Instructions step
   if (step === 'instructions') {
     if (instructionsVisible || !mediaAllowed) {
@@ -1044,7 +1169,7 @@ const GiveTest = ({ jdId }) => {
             setInstructionsVisible(false);
             setTestStarted(true);
             setStep('test');
-            // Media request will be auto-triggered by the testStarted effect above
+            // Test starts after instructions, recording is already active
           }}
           mediaAllowed={mediaAllowed}
         />
@@ -1185,7 +1310,7 @@ const GiveTest = ({ jdId }) => {
           questions={currentSection?.questions || []}
           candidateId={finalCandidateId}
           questionSetId={questionSetId}
-          baseUrl={window.REACT_APP_BASE_URL || 'https://python-k0xt.onrender.com'}
+          baseUrl={window.REACT_APP_BASE_URL || 'https://recruterai.netfotech.in/ai'}
           onClose={() => setShowAudioInterview(false)}
           onComplete={(qa) => {
             setAudioInterviewResults(qa);
@@ -1248,29 +1373,24 @@ const GiveTest = ({ jdId }) => {
 
       {!submitted && <FaceDetection faceEventRef={faceEventRef} />}
 
-      {/* Persistent hidden recorder - mount only after recording started */}
-      {!submitted && recordingStarted && (
-        <div style={{ position: 'absolute', width: '0', height: '0', overflow: 'hidden' }} aria-hidden="true">
-          {console.log('GiveTest: mounting WebCamRecorder, sharedStream?', !!(streamRef.current || localStream || window.__candidateCameraStream))}
-          <WebCamRecorder
-            ref={webcamInterviewRef}
-            questions={(sections || []).flatMap(s => (s.questions || [])).map(q => ({
-              question_id: q.id || q._id || q.question_id,
-              prompt_text: q.prompt_text || q.content?.prompt_text || q.question || '',
-            }))}
-            candidateId={finalCandidateId}
-            questionSetId={questionSetId}
-            sharedStream={streamRef.current || localStream || window.__candidateCameraStream}
-            autoStart={true}
-            onComplete={(qa_payload) => {
-              console.log('GiveTest: persistent recorder onComplete with qa_payload=', qa_payload);
-            }}
-          />
-        </div>
-      )}
+      {/* Persistent hidden recorder - always mounted to capture entire test */}
+      {/* Uses the SAME stream throughout (from CameraCheck) - never creates its own stream */}
+      <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <WebCamRecorder
+          ref={webcamInterviewRef}
+          candidateId={finalCandidateId}
+          questionSetId={questionSetId}
+          sharedStream={streamRef.current || localStream || window.__candidateCameraStream}
+          autoStart={false}
+          previewOnly={false}
+          allowUpload={true}
+          isSharedStreamOnly={true}
+          onComplete={(qa) => {/* callback when upload completes */}}
+        />
+      </div>
 
-      {/* Live Recording Indicator Badge - shows when recording is active */}
-      {!submitted && recordingStarted && (
+      {/* Live Recording Indicator Badge - shows when recording is active and test is running */}
+      {recordingStarted && recordingPermissionGranted && testStarted && !submitted && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
           <div className="bg-red-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-pulse">
             <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
@@ -1304,7 +1424,7 @@ const GiveTest = ({ jdId }) => {
       )}
 
       {/* Floating draggable webcam preview (candidate) - rendered during test step or while testStarted */}
-      {!submitted && (step === 'test' || testStarted || mediaAllowed || !!window.__candidateCameraStream) && (
+      {!submitted && recordingPermissionGranted && (step === 'test' || testStarted || mediaAllowed || !!window.__candidateCameraStream) && (
         <WebcamPreview
           webcamRef={webcamRef}
           canvasRef={canvasRef}
@@ -1479,29 +1599,18 @@ const GiveTest = ({ jdId }) => {
                         <h2 className="text-xl font-bold mb-4">Final Interview Recording</h2>
 
                         <WebCamRecorder
-                          ref={webcamInterviewRef}
+                          ref={webcamPreviewRef}
                           questions={currentSection?.questions || []}
                           candidateId={finalCandidateId}
                           questionSetId={questionSetId}
                           baseUrl={window.REACT_APP_BASE_URL || 'http://127.0.0.1:5000'}
+                          sharedStream={streamRef.current || localStream || window.__candidateCameraStream}
+                          previewOnly={true}
+                          allowUpload={false}
                           onComplete={(qa_payload) => {
-                            console.log('GiveTest: received qa_payload from WebCamRecorder:', qa_payload);
-                            // merge returned QA into allAnswers
-                            if (qa_payload && Array.isArray(qa_payload)) {
-                              // build merged answers object immediately and submit using it
-                              const merged = { ...(allAnswers || {}) };
-                              qa_payload.forEach(item => {
-                                if (item && item.question_id) merged[item.question_id] = item.answer || '';
-                              });
-                              console.log('GiveTest: merged answers (will submit):', merged);
-                              setAllAnswers(merged);
-                              // ensure recorder stopped and submit using merged answers to avoid stale state
-                              try { webcamInterviewRef.current?.stopAll(); } catch (e) {}
-                              handleSubmitAllSections(merged);
-                            } else {
-                              try { webcamInterviewRef.current?.stopAll(); } catch (e) {}
-                              handleSubmitAllSections();
-                            }
+                            console.log('GiveTest: preview recorder onComplete (no upload):', qa_payload);
+                            setShowWebcamInterview(false);
+                            toast.success('Video preview closed. Final upload will occur on test submit.');
                           }}
                         />
                       </div>
@@ -1621,7 +1730,7 @@ const GiveTest = ({ jdId }) => {
                       ? (audioInterviewDone ? 'Submit Test' : (audioInterviewVisited ? 'Visit Audio Interview' : 'Visit Audio Interview'))
                       : (audioInterviewVisited ? 'Go To Next Part' : 'Visit Audio Interview')
                     )
-                  : ((currentSection?.type === 'mcq' || currentSection?.type === 'coding') && currentQuestionIndex === totalQuestionsInSection - 1 && currentSectionIndex === sections.length - 1)
+                  : ((currentSection?.type === 'mcq' || currentSection?.type === 'coding' || currentSection?.type === 'video') && currentQuestionIndex === totalQuestionsInSection - 1 && currentSectionIndex === sections.length - 1)
                   ? 'Submit Test'
                   : currentQuestionIndex === totalQuestionsInSection - 1
                   ? 'Proceed to Next Section'
@@ -1630,15 +1739,32 @@ const GiveTest = ({ jdId }) => {
               </div>
             </div>
           )}
+          {/* Show submit button for Video section (especially when it's the final section) */}
+          {currentSection?.type === 'video' && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    if (submitting) return;
+                    handleSubmitAllSections().catch(e => console.warn('Submit failed', e));
+                  }}
+                  disabled={submitting}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
+                >
+                  {submitting ? 'Submitting...' : (currentSectionIndex === sections.length - 1 ? 'Submit Test' : 'Next')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-      {/* Global submitting overlay (covers entire test while submitting) */}
+      {/* Global submitting overlay (covers entire test while submitting and stopping recording) */}
       {submitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative z-10 flex flex-col items-center gap-3 p-6 bg-white bg-opacity-90 rounded-lg shadow-lg">
             <div className="w-14 h-14 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin" />
-            <div className="text-gray-700 font-medium">Submitting test... Please wait</div>
+            <div className="text-gray-700 font-medium">Submitting test and finalizing recording... Please wait</div>
           </div>
         </div>
       )}
