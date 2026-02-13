@@ -1867,56 +1867,49 @@ const GiveTest = ({ jdId }) => {
   }
 
   // When audio interview is open, show only that UI
-  if (showAudioInterview) {
-    return (
-      <>
-        <ActivityMonitor
-          questionSetId={questionSetId}
-          candidateName={userInfo.name}
-          email={userInfo.email}
-          faceEventRef={faceEventRef}
-          testStarted={testStarted}
-          submitted={submitted}
-          onViolation={handleViolation}
-        />
+  
 
-        {!submitted && <FaceDetection faceEventRef={faceEventRef} />}
+  // NOTE: Do not early-return for AudioInterview; keep recorder mounted across sections.
 
-        <AudioInterview
-          questions={currentSection?.questions || []}
-          candidateId={finalCandidateId}
-          questionSetId={questionSetId}
-          baseUrl={window.REACT_APP_BASE_URL || 'https://python-k0xt.onrender.com'}
-          onClose={() => setShowAudioInterview(false)}
-          onComplete={(qa) => {
-            setAudioInterviewResults(qa);
-            // merge audio answers into main answers map so submit includes them
-            setAllAnswers(prev => {
-              const next = { ...prev };
-              (qa || []).forEach(item => {
-                if (item && item.questionId) next[item.questionId] = item.answer || '';
-              });
-              return next;
-            });
-            setShowAudioInterview(false);
-            setAudioInterviewDone(true);
-            toast.success('Audio interview completed.');
-          }}
-          faceEventRef={faceEventRef}
-          showMultipleFaces={showMultipleFaces}
-          showTabSwitch={showTabSwitch}
-          sharedStream={streamRef.current || localStream}
-          remainingTime={questionTimeLeft}
-          updateRemainingTime={(t) => setQuestionTimeLeft(Number(t))}
-          onAudioTimeUp={handleTimeUp}
-        />
-      </>
-    );
-  }
 
   // UI
   return (
     <>
+
+      {/* Audio Interview Overlay (keeps the recorder mounted so recording does NOT restart) */}
+      {showAudioInterview && (
+        <div className="fixed inset-0 z-[9999] bg-white overflow-auto">
+          <AudioInterview
+            questions={currentSection?.questions || []}
+            candidateId={finalCandidateId}
+            questionSetId={questionSetId}
+            baseUrl={window.REACT_APP_BASE_URL || 'https://python-k0xt.onrender.com'}
+            onClose={() => setShowAudioInterview(false)}
+            onComplete={(qa) => {
+              setAudioInterviewResults(qa);
+              // merge audio answers into main answers map so submit includes them
+              setAllAnswers((prev) => {
+                const next = { ...prev };
+                (qa || []).forEach((item) => {
+                  if (item && item.questionId) next[item.questionId] = item.answer || '';
+                });
+                return next;
+              });
+              setShowAudioInterview(false);
+              setAudioInterviewDone(true);
+              toast.success('Audio interview completed.');
+            }}
+            faceEventRef={faceEventRef}
+            showMultipleFaces={showMultipleFaces}
+            showTabSwitch={showTabSwitch}
+            sharedStream={streamRef.current || localStream}
+            remainingTime={questionTimeLeft}
+            updateRemainingTime={(t) => setQuestionTimeLeft(Number(t))}
+            onAudioTimeUp={handleTimeUp}
+          />
+        </div>
+      )}
+
 
       <ToastContainer
         position="top-center"
