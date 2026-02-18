@@ -128,15 +128,6 @@ function JD() {
     setCurrentPage(page);
   };
 
-  const incomingTotalPages = Math.ceil(incomingJDs.length / incomingRowsPerPage);
-  const incomingStartIndex = (incomingCurrentPage - 1) * incomingRowsPerPage;
-  const incomingEndIndex = incomingStartIndex + incomingRowsPerPage;
-  const currentIncomingData = incomingJDs.slice(incomingStartIndex, incomingEndIndex);
-
-  const handleIncomingPageChange = (page) => {
-    setIncomingCurrentPage(page);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -152,6 +143,17 @@ function JD() {
       return false;
     }
   };
+
+  const nonExpiredIncomingJDs = incomingJDs.filter(jd => !isExpired(jd.dueDate));
+  const incomingTotalPages = Math.ceil(nonExpiredIncomingJDs.length / incomingRowsPerPage);
+  const incomingStartIndex = (incomingCurrentPage - 1) * incomingRowsPerPage;
+  const incomingEndIndex = incomingStartIndex + incomingRowsPerPage;
+  const currentIncomingData = nonExpiredIncomingJDs.slice(incomingStartIndex, incomingEndIndex);
+
+  const handleIncomingPageChange = (page) => {
+    setIncomingCurrentPage(page);
+  };
+
 
   const formatId = (id) => {
     if (!id) return 'N/A';
@@ -508,55 +510,49 @@ function JD() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentIncomingData.map((jd, index) => {
-                    const incomingExpired = isExpired(jd.dueDate);
-                    return (
-                    <tr key={jd._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {incomingStartIndex + index + 1}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {jd.jobTitle || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {jd.companyName || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {jd.priority || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900" style={{ minWidth: '250px' }}>
-                        <div className="break-words whitespace-normal">
-                          {jd.location?.length > 0 ? jd.location.join(", ") : '-'}
-                        </div>
-                      </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {jd.country || '-'}
-                      </td> */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {jd.experience || '-'}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900" style={{ minWidth: '250px' }}>
-                        <div className="max-h-16 overflow-y-auto break-words whitespace-normal">
-                          {jd.skills?.length ? jd.skills.join(", ") : "-"}
-                        </div>
-                      </td>
-
-
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          type="button"
-                          onClick={() => !incomingExpired && handleSelectJD(jd)}
-                          disabled={incomingExpired}
-                          title={incomingExpired ? 'Due date passed — cannot select' : 'Select'}
-                          className={`px-4 py-2 rounded-lg font-medium transition-colors ${incomingExpired ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
-                        >
-                          Select
-                        </button>
-                      </td>
-                    </tr>
-                  )})}
-                </tbody>
+               <tbody className="bg-white divide-y divide-gray-200">
+  {currentIncomingData.map((jd, index) => (
+    <tr key={jd._id} className="hover:bg-gray-50">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {incomingStartIndex + index + 1}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {jd.jobTitle || '-'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {jd.companyName || '-'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {jd.priority || '-'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {formatDate(jd.dueDate)}
+      </td>
+      <td className="px-6 py-4 text-sm text-gray-900" style={{ minWidth: '250px' }}>
+        <div className="break-words whitespace-normal">
+          {jd.location?.length > 0 ? jd.location.join(", ") : '-'}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {jd.experience || '-'}
+      </td>
+      <td className="px-4 py-4 text-sm text-gray-900" style={{ minWidth: '250px' }}>
+        <div className="max-h-16 overflow-y-auto break-words whitespace-normal">
+          {jd.skills?.length ? jd.skills.join(", ") : "-"}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <button
+          type="button"
+          onClick={() => handleSelectJD(jd)}
+          className="px-4 py-2 rounded-lg font-medium transition-colors bg-black text-white hover:bg-gray-800"
+        >
+          Select
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
               </table>
             )}
             {incomingTotalPages > 1 && (
