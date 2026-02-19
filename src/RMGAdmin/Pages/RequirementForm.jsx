@@ -249,7 +249,7 @@ function RequirementForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Due date <span className="text-red-500">*</span>
+                  Hiring Deadline <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -264,7 +264,7 @@ function RequirementForm() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assigned To (HR) <span className="text-red-500">*</span>
+                  Assigned To (Recruiter) <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="assignedTo"

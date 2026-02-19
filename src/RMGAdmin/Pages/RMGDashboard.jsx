@@ -236,7 +236,7 @@ function RMGDashboard() {
                     { title: "Total Requisition", value: totalJDsAssigned, line: TAL, img: TA, text: "text-green-600" },
                     { title: "Total JDs Created", value: totalJDsCreated, line: ISL, img: TC, text: "text-red-600" },
                     { title: "Monthly Recruiter Assigned", value: totalRecruitersAssigned, line: TFL, img: MS, text: "text-green-600" },
-                    { title: "Pending Offers", value: pendingOffers, line: TAL, img: PO, text: "text-green-600" },
+                    { title: "Pending Requisitions", value: pendingOffers, line: TAL, img: PO, text: "text-green-600" },
                 ]);
 
                 setPriorityData(processPriorityData(offers, "all"));
@@ -382,11 +382,11 @@ function RMGDashboard() {
 
                 <div className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
-                        <h3 className="text-xl font-bold text-slate-900">JD Assigned vs Created</h3>
+                        <h3 className="text-xl font-bold text-slate-900">Requisition Volume - Created Vs Assigned</h3>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-3 rounded-full bg-pink-100"></div>
-                                <span className="text-sm text-gray-600">JD Assigned</span>
+                                <span className="text-sm text-gray-600">Requisition Assigned</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-3 rounded-full bg-rose-500"></div>
@@ -510,7 +510,7 @@ function RMGDashboard() {
                             <div className="flex items-center gap-4 text-xs">
                                 <div className="flex items-center gap-1">
                                     <div className="w-3 h-3 rounded-full bg-[#ff8a9a]"></div>
-                                    <span>Current <br />Offers</span>
+                                    <span>Current <br />Requisitions</span>
                                     <span className="font-bold text-gray-800">({trendTotals.candidates})</span>
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -555,7 +555,7 @@ function RMGDashboard() {
                                         interval={0}
                                     />
                                     <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
-                                    <Area type="monotone" dataKey="candidates" stroke="#ff8a9a" strokeWidth={2} fillOpacity={1} fill="url(#colorCand)" dot={{ r: 4, fill: '#fff', stroke: '#ff8a9a', strokeWidth: 2 }} name="Current Offers" />
+                                    <Area type="monotone" dataKey="candidates" stroke="#ff8a9a" strokeWidth={2} fillOpacity={1} fill="url(#colorCand)" dot={{ r: 4, fill: '#fff', stroke: '#ff8a9a', strokeWidth: 2 }} name="Current Requisitions" />
                                     <Area type="monotone" dataKey="jd" stroke="#8280ff" strokeWidth={2} fillOpacity={1} fill="url(#colorJd)" dot={{ r: 4, fill: '#fff', stroke: '#8280ff', strokeWidth: 2 }} name="JD Created" />
                                     <Area type="monotone" dataKey="allHr" stroke="#c58fff" strokeWidth={2} fillOpacity={1} fill="url(#colorAllHr)" dot={{ r: 4, fill: '#fff', stroke: '#c58fff', strokeWidth: 2 }} name="Total Candidates" />
                                 </AreaChart>
@@ -566,7 +566,7 @@ function RMGDashboard() {
 
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
                     <div className="flex justify-between items-center mb-6 flex-wrap gap-3 max-lg:flex-col max-lg:items-start">
-                        <h3 className="text-lg font-bold text-gray-800">JD Generation</h3>
+                        <h3 className="text-lg font-bold text-gray-800">Create Job Description</h3>
                         <div className="flex items-center gap-3 max-lg:flex-col max-lg:items-start">
                             <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <span>0</span>

@@ -454,7 +454,7 @@ const RecruiterDashboard = () => {
                 <div className="lg:col-span-3 bg-white rounded-xl p-6 shadow-sm h-[320px]">
                     <div className="flex flex-wrap justify-between items-center mb-6">
                         <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold">All Job Descriptions</h3>
+                            <h3 className="text-lg font-semibold">Requisition Overview</h3>
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}

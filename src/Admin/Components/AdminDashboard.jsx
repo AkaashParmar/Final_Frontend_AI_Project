@@ -70,7 +70,7 @@ function AdminDashboard() {
     { title: "Total Jobs", value: dashboardData.offersCount, line: TAL, img: img1, text: "text-green-600" },
     { title: "Total Applicants", value: dashboardData.candidatesCount, line: ISL, img: img2, text: "text-red-600" },
     { title: "Total JDs", value: dashboardData.jdCount, line: TFL, img: img2, text: "text-green-600" },
-    { title: "Total HRs", value: dashboardData.hrCount, line: TAL, img: img1, text: "text-green-600" },
+    { title: "Total Recruiters", value: dashboardData.hrCount, line: TAL, img: img1, text: "text-green-600" },
   ], [dashboardData]);
 
   const chartData = useMemo(() => {
@@ -98,7 +98,7 @@ function AdminDashboard() {
       { name: 'Candidates', value: calculatePercentage(filteredCandidates.length), count: filteredCandidates.length, fill: '#FF8A9B' },
       { name: 'HRs', value: calculatePercentage(dashboardData.hrCount), count: dashboardData.hrCount, fill: '#6B71FF' },
       { name: 'JDs', value: calculatePercentage(filteredJDs.length), count: filteredJDs.length, fill: '#D9E87D' },
-      { name: 'Offers', value: calculatePercentage(filteredOffers.length), count: filteredOffers.length, fill: '#E589F5' },
+      { name: 'Requisitions', value: calculatePercentage(filteredOffers.length), count: filteredOffers.length, fill: '#E589F5' },
       { name: 'RMG', value: calculatePercentage(dashboardData.rmgCount), count: dashboardData.rmgCount, fill: '#5BC0DE' },
     ];
   }, [dashboardData, systemOverviewFilter]);
@@ -349,7 +349,7 @@ function AdminDashboard() {
           <div className="lg:col-span-3">
             <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 h-full flex flex-col">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">JD Priority</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Requisition Priority</h3>
                 <select 
                   className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600"
                   value={jdPriorityFilter}
@@ -446,7 +446,7 @@ function AdminDashboard() {
           <div className="lg:col-span-2 h-[400px]">
             <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 h-full flex flex-col">
               <div className="flex justify-between items-center mb-4 sm:mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">JD Generation</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Create Job Description</h3>
                 <div className="flex items-center gap-3">
                   <select
                     className="text-sm border border-gray-200 rounded-lg px-2 py-1 text-gray-600"
@@ -548,7 +548,7 @@ function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-3 h-3 rounded-full bg-[#c58fff]"></div>
-                  <span>Offers</span>
+                  <span>Requisitions</span>
                   <span className="font-bold text-gray-800">({trendTotals.offers})</span>
                 </div>
               </div>

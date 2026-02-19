@@ -479,7 +479,7 @@ const CandidateDashboard = () => {
     const stats = [
         { title: "Total Applications", value: jdCounts.totalAppliedJds, img: TA, text: "text-pink-600", line: TAL },
         { title: "Total Filtered", value: jdCounts.filteredJds, img: TF, text: "text-purple-600", line: TFL },
-        { title: "Total Incoming JD", value: totalJdsCount, img: IF, text: "text-indigo-600", line: ISL },
+        { title: "Total Job Description", value: totalJdsCount, img: IF, text: "text-indigo-600", line: ISL },
         { title: "Total Unfiltered", value: jdCounts.unfilteredJds, img: TU, text: "text-pink-600", line: TAL },
     ];
 

@@ -368,7 +368,7 @@ function JD() {
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Filtered</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Unfiltered</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Action</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">See JD</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">View JD</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Send Invite</th>
                   </tr>
                 </thead>

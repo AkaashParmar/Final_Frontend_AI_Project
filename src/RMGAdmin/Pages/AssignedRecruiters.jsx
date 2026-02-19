@@ -120,7 +120,7 @@ export default function AssignedRecruiters() {
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-4 flex-wrap">
+                        {/* <div className="flex items-center gap-4 flex-wrap">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                                 <span className="text-sm text-gray-700">Closed</span>
@@ -133,7 +133,7 @@ export default function AssignedRecruiters() {
                                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
                                 <span className="text-sm text-gray-700">Expired</span>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     <div className="flex gap-2 shrink-0">
@@ -190,7 +190,7 @@ export default function AssignedRecruiters() {
                                                     state: { jdData: job }
                                                 })}
                                                 className="px-3 py-1.5 bg-orange-500 text-white rounded text-sm hover:bg-orange-600 transition-colors whitespace-nowrap">
-                                                See History
+                                                View
                                             </button>
                                         </div>
                                     </td>
