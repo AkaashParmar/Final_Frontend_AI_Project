@@ -128,15 +128,6 @@ function JD() {
     setCurrentPage(page);
   };
 
-  const incomingTotalPages = Math.ceil(incomingJDs.length / incomingRowsPerPage);
-  const incomingStartIndex = (incomingCurrentPage - 1) * incomingRowsPerPage;
-  const incomingEndIndex = incomingStartIndex + incomingRowsPerPage;
-  const currentIncomingData = incomingJDs.slice(incomingStartIndex, incomingEndIndex);
-
-  const handleIncomingPageChange = (page) => {
-    setIncomingCurrentPage(page);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -152,6 +143,17 @@ function JD() {
       return false;
     }
   };
+
+  const nonExpiredIncomingJDs = incomingJDs.filter(jd => !isExpired(jd.dueDate));
+  const incomingTotalPages = Math.ceil(nonExpiredIncomingJDs.length / incomingRowsPerPage);
+  const incomingStartIndex = (incomingCurrentPage - 1) * incomingRowsPerPage;
+  const incomingEndIndex = incomingStartIndex + incomingRowsPerPage;
+  const currentIncomingData = nonExpiredIncomingJDs.slice(incomingStartIndex, incomingEndIndex);
+
+  const handleIncomingPageChange = (page) => {
+    setIncomingCurrentPage(page);
+  };
+
 
   const formatId = (id) => {
     if (!id) return 'N/A';
@@ -524,9 +526,6 @@ function JD() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {jd.priority || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(jd.dueDate)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900" style={{ minWidth: '250px' }}>
                         <div className="break-words whitespace-normal">
