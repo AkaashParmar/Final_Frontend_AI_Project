@@ -321,9 +321,13 @@ function Results() {
               attempts_count: 1,
               created_at: ts,
               // keep a representative recording/audio URL and raw qa_data for viewing
+              // Store the specific attempt ID for exact video retrieval
+              id: a.id || a._id || null, 
               video_url: a.video_url || a.video || a.videoUrl || null,
               audio_url: a.audio_url || a.audio || a.audioUrl || null,
+              proctoring_video_url: a.proctoring_video_url || null,
               qa_data: a.qa_data || a.qaData || null,
+              results_data: a.results_data || null,
             };
           } else {
             aggMap[key].totalScore += score;
@@ -339,9 +343,12 @@ function Results() {
             // prefer newer recording/audio if this attempt is newer
             const existingTs = aggMap[key].created_at;
             if (ts && (!existingTs || ts >= existingTs)) {
+              aggMap[key].id = a.id || a._id || aggMap[key].id;
               aggMap[key].video_url = a.video_url || a.video || a.videoUrl || aggMap[key].video_url;
               aggMap[key].audio_url = a.audio_url || a.audio || a.audioUrl || aggMap[key].audio_url;
+              aggMap[key].proctoring_video_url = a.proctoring_video_url || aggMap[key].proctoring_video_url;
               aggMap[key].qa_data = a.qa_data || a.qaData || aggMap[key].qa_data;
+              aggMap[key].results_data = a.results_data || aggMap[key].results_data;
             }
           }
         }
@@ -409,10 +416,15 @@ function Results() {
       }
       const orgId = localStorage.getItem('org_id') || localStorage.getItem('orgId');
       testApi.getVideoUrl(attemptId, orgId)
-        .then((j) => {
+        .then(async (j) => {
           if (!mounted) return;
-          const v = j && (j.video_url || j.videoUrl || j.url || (j.data && j.data.video_url));
-          setUrl(v || null);
+          const raw = j && (j.video_url || j.videoUrl || j.url || (j.data && j.data.video_url));
+          if (raw) {
+            const resolved = await resolveMediaUrl(raw);
+            if (mounted) setUrl(resolved);
+          } else {
+            setUrl(null);
+          }
         })
         .catch((e) => {
           console.error('VideoPlayer getVideoUrl failed', e);
@@ -778,8 +790,10 @@ function Results() {
                             <div className="flex items-center gap-3">
                               {(() => {
                                 const scoreNum = parseFloat(displayScore) || 0;
-                                const maxScore = 100;
-                                const percentage = Math.min((scoreNum / maxScore) * 100, 100);
+                                const maxScore = Array.isArray(a.results_data) 
+                                  ? a.results_data.reduce((sum, q) => sum + (Number(q.positive_marking) || 0), 0) 
+                                  : (selectedJob?.raw?.max_score || 100);
+                                const percentage = maxScore > 0 ? Math.min((scoreNum / maxScore) * 100, 100) : 0;
                                 const isLow = percentage < 35;
                                 const strokeColor = isLow ? '#ef4444' : '#6c5ce7';
                                 const trackColor = isLow ? '#fecaca' : '#e8defd';
@@ -848,17 +862,12 @@ function Results() {
                           </td>
 
                           <td className="px-6 py-5 text-center">
-                            {a.video_url ? (
+                            {(a.proctoring_video_url || a.video_url) ? (
                               <button
                                 onClick={() => {
                                   try {
-                                    const cid =
-                                      a.candidate_id ||
-                                      a.candidate?.id ||
-                                      a.candidate?._id ||
-                                      a.candidate?.candidate_id ||
-                                      String(i);
-                                    setPlayAttemptId(cid || String(i));
+                                    // Pass the actual database attempt ID to ensure correct video fetching
+                                    setPlayAttemptId(a.id || a.candidate_id || String(i));
                                   } catch (e) {
                                     console.error('Play click failed', e);
                                   }
